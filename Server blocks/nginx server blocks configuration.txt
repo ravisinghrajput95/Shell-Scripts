@@ -1,0 +1,173 @@
+#install nginx
+apt-get install nginx
+
+#create root directory for nginx virtual hosts(server blocks)
+sudo mkdir -p /var/www/example.com/html
+sudo mkdir -p /var/www/example1.com/html
+
+sudo chown -R $USER:$USER /var/www/example.com/html
+sudo chown -R $USER:$USER /var/www/example1.com/html
+
+#assigning permissions
+sudo chmod -R 755 /var/www #755 means read and execute access for everyone and also write access for the owner of the file. 
+
+#Create Sample Pages for first domain
+vi /var/www/example.com/html/index.html
+
+then insert below code:-
+<html>
+    <head>
+        <title>Welcome to Example.com!</title>
+    </head>
+    <body>
+        <h1>Success!  The example.com server block is working!</h1>
+    </body>
+</html>
+
+#creating the same page for second domain
+cp /var/www/example.com/html/index.html /var/www/example1.com/html/
+
+#open new file in the editor
+vi /var/www/example1.com/html/index.html
+
+insert below code for second domain:-
+<html>
+    <head>
+        <title>Welcome to example1.com!</title>
+    </head>
+    <body>
+        <h1>Success!  The example1 server block is working!</h1>
+    </body>
+</html>
+
+#Create server blocks for each domain:
+  #Create the First Server Block File
+
+sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/example.com
+
+#Now, open the new file you created in your text editor with sudo privileges:
+sudo vi /etc/nginx/sites-available/example.com
+
+Insert:
+
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server; #remove default_server
+
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name _;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+
+Next, adjust is the document root, specified by the root directive. Point it to the site’s document root that you created:
+
+server {
+        listen 80;
+        listen [::]:80;
+
+        root /var/www/example.com/html;
+
+}
+
+final:
+
+server {
+        listen 80;
+        listen [::]:80;
+
+        root /var/www/example.com/html;
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name example.com www.example.com;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+
+#Create the Second Server Block File
+we have our initial server block configuration, we can use that as a basis for our second file. Copy it over to create a new file:
+
+sudo cp /etc/nginx/sites-available/example.com /etc/nginx/sites-available/example1.com
+sudo vi /etc/nginx/sites-available/example1.com
+
+Insert:
+server {
+        listen 80;
+        listen [::]:80;
+
+        root /var/www/example1.com/html;
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name test.com www.example1.com;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+
+#Enable your Server Blocks and Restart Nginx
+
+sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/example1.com /etc/nginx/sites-enabled/
+
+We now have three server blocks enabled, which are configured to respond based on their listen directive and the server_name
+
+example.com: Will respond to requests for example.com and www.example.com
+example1.com: Will respond to requests for example1.com and www.test.com
+default: Will respond to any requests on port 80 that do not match the other two blocks.
+
+#In order to avoid a possible hash bucket memory problem that can arise from adding additional server names, we will go ahead and adjust a single value within our /etc/nginx/nginx.conf file.
+
+
+sudo vi /etc/nginx/nginx.conf
+
+#Within the file, find the server_names_hash_bucket_size directive. Remove the # symbol to uncomment the line:
+Reason: If the default value of server_names_hash_bucket_size used at the server is not enough, means nginx complained with could not build the server_names_hash, you should increase server_names_hash_bucket_size: 32 , the directive value should be increased to the next power of two (e.g. in this case to 64).
+
+#Next, test to make sure that there are no syntax errors in any of your Nginx files:
+sudo nginx -t
+
+#If no problems were found, restart Nginx to enable your changes:
+sudo systemctl restart nginx
+
+#Modify Your Local Hosts File for Testing.
+
+sudo vi /etc/hosts
+
+insert:
+34.125.252.184 example.com www.example.com
+34.125.252.184 test.com www.example1.com
+
+#Test
+http://example.com
+http://example1.com
+
+#Server Configuration
+/etc/nginx: The Nginx configuration directory. All of the Nginx configuration files reside here.
+
+/etc/nginx/nginx.conf: The main Nginx configuration file. This can be modified to make changes to the Nginx global configuration.
+
+/etc/nginx/sites-available/: The directory where per-site “server blocks” can be stored. Nginx will not use the configuration files found in this directory unless they are linked to the sites-enabled directory (see below). Typically, all server block configuration is done in this directory, and then enabled by linking to the other directory.
+
+/etc/nginx/sites-enabled/: The directory where enabled per-site “server blocks” are stored. Typically, these are created by linking to configuration files found in the sites-available directory.
+
+/etc/nginx/snippets: This directory contains configuration fragments that can be included elsewhere in the Nginx configuration. Potentially repeatable configuration segments are good candidates for refactoring into snippets.
+
+#Server Logs
+/var/log/nginx/access.log: Every request to your web server is recorded in this log file unless Nginx is configured to do otherwise.
+/var/log/nginx/error.log: Any Nginx errors will be recorded in this log.
+
+
+
+
+
+
+
+
+
