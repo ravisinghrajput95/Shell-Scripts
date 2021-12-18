@@ -1,5 +1,4 @@
 # Check if a process is running and kill it
------------------------------------------
 #!/bin/bash
 
 # Start a process first to kill
