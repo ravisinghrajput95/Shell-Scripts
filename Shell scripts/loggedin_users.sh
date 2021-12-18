@@ -1,12 +1,12 @@
-List of Users Logged in Today
-------------------------------
+#List of Users Logged in Today
+
 #!/bin/bash
 today=`date | awk '{print $1,$2,$3}'`
 #last | grep $today | awk '{print $1}'
 last | grep "$today"
 
-Taking input from the user
----------------------------
+#Taking input from the user
+
 #!/bin/bash
 echo "please enter day (e.g. Mon)"
 
