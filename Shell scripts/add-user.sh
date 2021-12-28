@@ -15,7 +15,7 @@ read -p 'Please enter password for the user: ' password
 useradd -c "${name}" -m ${username}
 
 #Set the password for the created user
-echo "${username}:${password}" | chpasswd
+echo -e "$password\n$password" |passwd "$username"
 
 #enforce the user to reset the password on the very first login
 passwd -e ${username}
